@@ -5,15 +5,19 @@ import { OpenAI } from 'openai';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-if (!process.env.OPENAI_API_KEY) {
-  console.error("OPENAI_API_KEY is missing.");
-}
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { url } = req.body;
 
+  console.log(`[API] Reçu une requête de résumé pour : ${url}`);
+
   if (!url) {
+    console.error('[API] URL manquante dans la requête.');
     return res.status(400).json({ error: 'Missing URL in request body' });
+  }
+
+  if (!process.env.OPENAI_API_KEY) {
+    console.error('[API] Clé API OpenAI manquante.');
+    return res.status(500).json({ error: 'Clé API manquante.' });
   }
 
   try {
@@ -22,9 +26,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         'User-Agent': 'Mozilla/5.0 (compatible; RésumeurBot/1.0)'
       }
     });
-    const html = await response.text();
 
-    const truncatedHtml = html.slice(0, 10000); // Limiter la taille pour éviter les dépassements de tokens
+    const html = await response.text();
+    const truncatedHtml = html.slice(0, 10000);
+
+    console.log(`[API] Contenu HTML récupéré (${truncatedHtml.length} caractères)`);
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4-turbo',
@@ -40,9 +46,11 @@ ${truncatedHtml}`,
     });
 
     const summary = completion.choices[0].message.content;
+
+    console.log('[API] Résumé généré avec succès.');
     res.status(200).json({ summary });
   } catch (error: any) {
-    console.error('Error:', error.response?.data || error.message || error);
+    console.error('[API] Une erreur est survenue :', error?.response?.data || error.message || error);
     res.status(500).json({ error: 'Something went wrong.' });
   }
 }
