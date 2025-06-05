@@ -6,31 +6,37 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSummarize = async () => {
-    setLoading(true);
-    setError('');
-    setSummary('');
+const handleSummarize = async () => {
+  console.log(`[Client] Demande de résumé pour l’URL : ${url}`);
 
-    try {
-      const res = await fetch('/api/summarize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-      });
+  setLoading(true);
+  setError('');
+  setSummary('');
 
-      const data = await res.json();
+  try {
+    const res = await fetch('/api/summarize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Une erreur est survenue.');
-      }
+    const data = await res.json();
 
-      setSummary(data.summary);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    if (!res.ok) {
+      console.error('[Client] Erreur renvoyée par l’API :', data.error);
+      throw new Error(data.error || 'Une erreur est survenue.');
     }
-  };
+
+    console.log('[Client] Résumé reçu.');
+    setSummary(data.summary);
+  } catch (err: any) {
+    console.error('[Client] Erreur lors du résumé :', err);
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div style={{ padding: '2rem', maxWidth: '600px', margin: 'auto' }}>
