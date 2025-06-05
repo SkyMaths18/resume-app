@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log(`[API] Contenu HTML récupéré (${truncatedHtml.length} caractères)`);
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4-turbo',
+      model: 'gpt-3.5-turbo',
       messages: [
         {
           role: 'user',
