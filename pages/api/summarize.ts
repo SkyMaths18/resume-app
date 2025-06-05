@@ -5,6 +5,10 @@ import { OpenAI } from 'openai';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+if (!process.env.OPENAI_API_KEY) {
+  console.error("OPENAI_API_KEY is missing.");
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { url } = req.body;
 
@@ -13,7 +17,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; RésumeurBot/1.0)'
+      }
+    });
     const html = await response.text();
 
     const truncatedHtml = html.slice(0, 10000); // Limiter la taille pour éviter les dépassements de tokens
@@ -34,7 +42,7 @@ ${truncatedHtml}`,
     const summary = completion.choices[0].message.content;
     res.status(200).json({ summary });
   } catch (error: any) {
-    console.error('Error:', error);
+    console.error('Error:', error.response?.data || error.message || error);
     res.status(500).json({ error: 'Something went wrong.' });
   }
 }
